@@ -41,6 +41,10 @@ struct ContentView: View {
     @State private var score = 0
     @State private var questions = 0
     @State private var gameOver = false
+    @State private var animationAmount = 0.0
+    @State private var rotations = [0.0, 0.0, 0.0]
+    @State private var opacities = [1.0, 1.0, 1.0]
+    @State private var scales = [1.0, 1.0, 1.0]
     var gameOverString = "Game Over"
     
     var body: some View {
@@ -62,11 +66,17 @@ struct ContentView: View {
                     
                     ForEach(0..<3 ) { number in
                         Button {
-                            flagTapped(number)
+                            withAnimation {
+                                flagTapped(number)
+                            }
                         } label: {
-                            FlagImage(country: countries[number])
+                            Image(countries[number])
                                 .clipShape(.rect)
                                 .shadow(radius: 5)
+                                .rotation3DEffect(.degrees(rotations[number]),axis: /*@START_MENU_TOKEN@*/(x: 0.0, y: 1.0, z: 0.0)/*@END_MENU_TOKEN@*/)
+                                .scaleEffect(scales[number])
+                                .opacity(opacities[number])
+                                
                         }
                     }
                 }
@@ -75,7 +85,6 @@ struct ContentView: View {
                 Text("Score is \(score)")
                     .foregroundStyle(.white)
                     .font(.largeTitle.bold())
-                
                 Spacer()
             }
         }
@@ -92,9 +101,17 @@ struct ContentView: View {
     }
     
     func flagTapped(_ number: Int) {
+        rotations[number] += 360
+        for index in (0..<rotations.count) {
+            if (index != number) {
+                opacities[index] = 0.25
+                scales[index] -= 0.75
+            }
+        }
         if number == correctAnswer {
             scoreTitle = "Correct"
             score = score + 1
+            animationAmount += 360.0
         }
         else {
             scoreTitle = "Wrong, that's the flag of \(countries[number])"
@@ -116,9 +133,13 @@ struct ContentView: View {
     func askQuestion() {
         countries.shuffle()
         correctAnswer = Int.random(in: 0...2)
+        withAnimation(.default) {
+            opacities = [1.0, 1.0, 1.0]
+            scales = [1.0, 1.0, 1.0]
+        }
     }
 }
-//
-//#Preview {
-//    ContentView()
-//}
+
+#Preview {
+    ContentView()
+}
